@@ -41,7 +41,7 @@ gemini --version   # Google Gemini CLI
 ### Opção 1 — clonar e rodar o instalador
 
 ```bash
-git clone https://github.com/SEU_USUARIO/claude-orchestrator.git
+git clone https://github.com/Tainmat/claude-orchestrator.git
 cd claude-orchestrator
 ./install.sh /caminho/do/seu/projeto
 ```
@@ -56,8 +56,13 @@ cd /caminho/do/seu/projeto
 ### Opção 2 — instalar via curl (one-liner)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SEU_USUARIO/claude-orchestrator/main/install.sh | bash -s -- /caminho/do/projeto
+curl -fsSL https://raw.githubusercontent.com/Tainmat/claude-orchestrator/main/install.sh | bash -s -- ~/projetos/cclx-frontend
 ```
+
+> **Importante:** troque `~/projetos/cclx-frontend` pelo caminho real do seu
+> projeto — não deixe nenhum placeholder. O one-liner via curl só funciona se o
+> repositório for **público** (o `raw.githubusercontent` exige token para repos
+> privados). Se o seu repo for privado, use a Opção 1 (clonar).
 
 > O instalador verifica os 3 CLIs, copia os arquivos, dá `chmod +x` nos scripts e
 > adiciona `.orchestrator/` ao `.gitignore`. Se já existir `CLAUDE.md` ou
