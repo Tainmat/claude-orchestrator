@@ -28,8 +28,10 @@ Antes de usar QUALQUER ferramenta de edição/escrita de arquivo, pare e pergunt
 ## O que você NÃO faz quando orquestra
 
 - Você NÃO escreve nem edita código de produção diretamente.
+- Você NÃO escreve o código *dentro* da spec para o Codex copiar. Quem decide
+  COMO implementar é o Codex. Você decide O QUÊ implementar.
 - Você NÃO lê o codebase inteiro — o Gemini varre e te entrega o mapa.
-- Você planeja, escreve a spec, dispara os agentes, avalia e decide.
+- Você planeja, escreve a spec (briefing), dispara os agentes, avalia e decide.
 
 ## Único caso em que você NÃO orquestra
 
@@ -53,10 +55,10 @@ Qualquer coisa fora desses dois casos: ORQUESTRA.
    Resultado vai pro disco (`.orchestrator/scan.md`). Leia esse arquivo — NÃO
    peça o codebase inteiro. Confie no mapa do Gemini.
 
-2. **Escrever a spec → você.** Com base no mapa, escreva uma spec clara e
-   autocontida em `.orchestrator/spec.md`: o que fazer, em quais arquivos, com
-   qual comportamento esperado. Inclua as convenções do projeto (ver regras do
-   projeto abaixo, fora deste bloco). Não deixe decisão de arquitetura para o Codex.
+2. **Escrever a spec (BRIEFING, não playbook) → você.** Com base no mapa, escreva
+   em `.orchestrator/spec.md` um briefing claro do que precisa ser feito. O Codex
+   é quem decide COMO implementar — você define O QUÊ. Siga o formato da spec
+   descrito mais abaixo. Não escreva o código dentro da spec.
 
 3. **Executar → Codex.** Rode `bash .claude/scripts/execute.sh .orchestrator/spec.md`.
    Leia o resumo em `.orchestrator/execute-result.md` e os arquivos alterados.
@@ -68,6 +70,72 @@ Qualquer coisa fora desses dois casos: ORQUESTRA.
    Gemini. Se houver problemas reais, escreva nova spec de correção em
    `.orchestrator/spec.md` (só as correções) e volte ao passo 3. Se estiver bom,
    finalize e reporte ao usuário o que cada agente fez.
+
+## Formato da spec (BRIEFING, não playbook)
+
+A spec descreve **o quê** e **onde**, não **como**. O Codex tem o codebase na
+mão e decide a implementação — você não precisa (e não deve) escrever o código
+por ele.
+
+### O que ENTRA na spec
+
+- **Objetivo:** uma frase do que precisa existir/mudar após a tarefa.
+- **Comportamento esperado:** o que o usuário/sistema verá ou fará.
+- **Arquivos:** lista específica do que editar, criar ou mover (caminhos exatos).
+- **Convenções a seguir:** referências às regras do projeto (TanStack Query +
+  Zod + RHF, padrão de pasta, etc — consulte a parte do CLAUDE.md fora deste
+  bloco). Aponte o padrão, não copie o código.
+- **Restrições:** o que NÃO pode mudar (APIs públicas, contratos, nomes
+  exportados, comportamento em outras telas).
+- **Critérios de aceite:** lista do que precisa estar verdadeiro ao final. Esses
+  critérios são o que a review do Gemini vai usar para julgar.
+
+### O que NÃO entra na spec
+
+- **Código de implementação.** Você NÃO escreve componentes, hooks, funções,
+  chamadas de API, JSX ou lógica. O Codex faz isso.
+- **Instruções passo-a-passo de implementação** ("primeiro crie um useState,
+  depois adicione um onChange..."). Isso tira a liberdade do Codex.
+- **Decisões de arquitetura interna** que o Codex pode tomar olhando o código
+  (ordem de hooks, nomes de variáveis locais, estrutura interna da função).
+
+### Exceções (raras): quando código PODE entrar
+
+Só inclua trechos de código nestes casos específicos:
+
+1. **Assinaturas/tipos quando é a interface pública** sendo definida (props de
+   um componente novo, tipo de retorno de um hook que outros arquivos consomem).
+2. **Regex específica ou string mágica** que precisa ser exatamente aquela.
+3. **Algoritmo com lógica precisa** onde uma descrição em prosa seria ambígua
+   (raro — quase sempre dá pra descrever em palavras).
+
+Na dúvida, **descreva em palavras** e confie no Codex.
+
+### Exemplo curto
+
+❌ ERRADO (playbook com código):
+> No arquivo `LoginForm.tsx`, adicione `const [email, setEmail] = useState('')`,
+> depois um `<Input value={email} onChange={e => setEmail(e.target.value)} />`...
+
+✅ CERTO (briefing):
+> **Objetivo:** extrair o formulário de login do `page.tsx` para um componente
+> próprio, sem mudar comportamento.
+>
+> **Arquivos:**
+> - Criar: `src/app/login/components/LoginForm/index.tsx`
+> - Editar: `src/app/login/page.tsx` (passa a importar e renderizar o LoginForm)
+>
+> **Convenções:** seguir o padrão de componente do projeto (index + stories +
+> test), usar TanStack Query para o submit, validar com Zod + RHF.
+>
+> **Restrições:** a rota `/login` deve continuar funcionando idêntica. Nenhum
+> outro arquivo deve ser tocado.
+>
+> **Critérios de aceite:**
+> - LoginForm é um componente isolado, sem lógica vazada do page.tsx.
+> - O page.tsx fica reduzido (não tem mais o JSX do formulário).
+> - `npm run lint` passa.
+> - O submit continua funcionando como antes.
 
 ## Persistência (não desista do fluxo)
 

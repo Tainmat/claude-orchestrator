@@ -14,12 +14,24 @@ mkdir -p "$OUT_DIR"
 codex exec \
   --sandbox workspace-write \
   -o "$RESULT_FILE" \
-  "Implemente exatamente a especificação abaixo. Não tome decisões de arquitetura
-por conta própria — se algo estiver ambíguo, faça a opção mais conservadora e
-ANOTE no resumo final. Ao terminar, liste só os arquivos alterados e um resumo
-de 3 linhas do que foi feito.
+  "Você recebeu um BRIEFING (não um playbook). O briefing diz O QUÊ fazer, em
+quais arquivos, e quais são os critérios de aceite. VOCÊ decide COMO implementar
+— escolha a abordagem, escreva o código, leia os arquivos que precisar do projeto.
 
-=== ESPECIFICAÇÃO ===
+Regras:
+- Cumpra todos os critérios de aceite do briefing.
+- Respeite as restrições (o que NÃO pode mudar).
+- Se houver trechos de código no briefing (assinatura, tipo, regex), use-os como
+  contrato exato — não os reinterprete.
+- Se algo no briefing estiver ambíguo, faça a opção mais conservadora e ANOTE no
+  resumo final.
+- Toque APENAS os arquivos listados em 'Arquivos'. Se precisar mexer em outro,
+  PARE e anote no resumo em vez de fazer.
+
+Ao terminar, liste só os arquivos alterados e um resumo de 3 linhas do que foi
+feito e por que escolheu essa abordagem.
+
+=== BRIEFING ===
 $(cat "$SPEC_FILE")" 2>/dev/null
 
 echo "✅ Execução concluída. Resumo em $RESULT_FILE"
