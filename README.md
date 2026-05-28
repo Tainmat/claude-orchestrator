@@ -56,10 +56,10 @@ cd /caminho/do/seu/projeto
 ### Opção 2 — instalar via curl (one-liner)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Tainmat/claude-orchestrator/main/install.sh | bash -s -- ~/projetos/cclx-frontend
+curl -fsSL https://raw.githubusercontent.com/Tainmat/claude-orchestrator/main/install.sh | bash -s -- ~/projetos/meu-projeto
 ```
 
-> **Importante:** troque `~/projetos/cclx-frontend` pelo caminho real do seu
+> **Importante:** troque `~/projetos/meu-projeto` pelo caminho real do seu
 > projeto — não deixe nenhum placeholder. O one-liner via curl só funciona se o
 > repositório for **público** (o `raw.githubusercontent` exige token para repos
 > privados). Se o seu repo for privado, use a Opção 1 (clonar).
