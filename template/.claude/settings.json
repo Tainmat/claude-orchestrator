@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash .claude/scripts/scan.sh:*)",
+      "Bash(bash .claude/scripts/execute.sh:*)",
+      "Bash(bash .claude/scripts/review.sh:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(cat .orchestrator/:*)",
+      "Read(.orchestrator/**)"
+    ],
+    "deny": []
+  }
+}

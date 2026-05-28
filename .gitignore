@@ -1,0 +1,11 @@
+# Arquivos efêmeros do orquestrador (caso se teste dentro do próprio repo)
+.orchestrator/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
