@@ -65,9 +65,12 @@ curl -fsSL https://raw.githubusercontent.com/Tainmat/claude-orchestrator/main/in
 > privados). Se o seu repo for privado, use a Opção 1 (clonar).
 
 > O instalador verifica os 3 CLIs, copia os arquivos, dá `chmod +x` nos scripts e
-> adiciona `.orchestrator/` ao `.gitignore`. Se já existir `CLAUDE.md` ou
-> `settings.json` no destino, ele salva as versões do orquestrador com sufixo
-> `.orchestrator` em vez de sobrescrever.
+> adiciona `.orchestrator/` ao `.gitignore`. Se já existir `CLAUDE.md` no destino,
+> ele **anexa o bloco de orquestração no topo** (entre marcadores
+> `<!-- ORCHESTRATOR:START -->` e `<!-- ORCHESTRATOR:END -->`), preservando suas
+> regras do projeto. Se não existir, cria um `CLAUDE.md` com o bloco + um espaço
+> para você adicionar as regras do projeto. O `uninstall.sh` remove apenas o
+> bloco, mantendo o resto.
 
 ## O que é instalado
 

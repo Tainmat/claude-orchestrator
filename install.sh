@@ -11,6 +11,8 @@
 set -euo pipefail
 
 REPO_RAW="https://raw.githubusercontent.com/Tainmat/claude-orchestrator/main"
+MARK_START="<!-- ORCHESTRATOR:START"
+MARK_END="<!-- ORCHESTRATOR:END -->"
 
 # --- Descobrir se rodamos a partir de um arquivo local ou via pipe (curl|bash) ---
 SRC="${BASH_SOURCE[0]:-}"
@@ -74,14 +76,48 @@ fetch() {
   fi
 }
 
-# --- CLAUDE.md (guarda contra sobrescrever) ---
-if [ -f "$TARGET/CLAUDE.md" ]; then
-  echo "⚠️  Já existe CLAUDE.md — salvando como CLAUDE.orchestrator.md para você mesclar."
-  fetch "CLAUDE.md" "$TARGET/CLAUDE.orchestrator.md"
+# Pega o conteúdo do bloco de orquestração (de arquivo local ou da web) para stdout
+get_block() {
+  if [ "$MODE" = "local" ]; then
+    cat "$TEMPLATE_DIR/orchestrator-block.md"
+  else
+    curl -fsSL "$REPO_RAW/template/orchestrator-block.md"
+  fi
+}
+
+# --- CLAUDE.md: anexa o bloco no TOPO (ou cria) ---
+CLAUDE_FILE="$TARGET/CLAUDE.md"
+TMP_BLOCK="$(mktemp)"
+get_block > "$TMP_BLOCK"
+
+if [ -f "$CLAUDE_FILE" ]; then
+  if grep -qF "$MARK_START" "$CLAUDE_FILE"; then
+    echo "ℹ️  Bloco de orquestração já existe no CLAUDE.md — pulando (use --force para atualizar)."
+  else
+    # Anexa o bloco no topo, preservando o conteúdo existente abaixo
+    TMP_NEW="$(mktemp)"
+    cat "$TMP_BLOCK" > "$TMP_NEW"
+    echo "" >> "$TMP_NEW"
+    echo "---" >> "$TMP_NEW"
+    echo "" >> "$TMP_NEW"
+    cat "$CLAUDE_FILE" >> "$TMP_NEW"
+    mv "$TMP_NEW" "$CLAUDE_FILE"
+    echo "✅ Bloco de orquestração anexado no TOPO do CLAUDE.md existente"
+  fi
 else
-  fetch "CLAUDE.md" "$TARGET/CLAUDE.md"
-  echo "✅ CLAUDE.md copiado para a raiz"
+  # Cria um CLAUDE.md novo só com o bloco + um placeholder pras regras do projeto
+  {
+    cat "$TMP_BLOCK"
+    echo ""
+    echo "---"
+    echo ""
+    echo "# Regras do projeto"
+    echo ""
+    echo "<!-- Adicione aqui o stack, comandos e convenções específicas do seu projeto. -->"
+  } > "$CLAUDE_FILE"
+  echo "✅ CLAUDE.md criado com o bloco de orquestração"
 fi
+rm -f "$TMP_BLOCK"
 
 # --- Scripts ---
 for s in scan.sh execute.sh review.sh; do
@@ -93,6 +129,7 @@ echo "✅ Scripts copiados para .claude/scripts/ (executáveis)"
 # --- settings.json (guarda contra sobrescrever) ---
 if [ -f "$TARGET/.claude/settings.json" ]; then
   echo "⚠️  Já existe .claude/settings.json — salvando como settings.orchestrator.json."
+  echo "   Mescle as permissões de auto-approve manualmente."
   fetch ".claude/settings.json" "$TARGET/.claude/settings.orchestrator.json"
 else
   fetch ".claude/settings.json" "$TARGET/.claude/settings.json"
