@@ -26,9 +26,17 @@ agentes que você invoca via Bash. Use os scripts em `.claude/scripts/`.
    autocontida em `.orchestrator/spec.md`. A spec deve dizer EXATAMENTE o que
    fazer, em quais arquivos, com qual comportamento esperado. Não deixe decisão
    de arquitetura para o Codex.
+   - **Decisão TDD:** inclua `## Testes` e `## Comando de testes` SOMENTE se:
+     1. O prompt do usuário contém **TDD** OU o CLAUDE.md do projeto tem **`TDD: sempre`**
+     2. `scan.md` confirma lib de testes instalada
+   - Se ambas as condições forem verdadeiras: use o padrão de caminho do scan;
+     se nenhum for encontrado, use `<dir-da-feature>/tests/<Arquivo>.test.<ext>`.
+   - Se qualquer condição falhar: omita as duas seções.
 
 4. **Executar → Codex.** Rode `bash .claude/scripts/execute.sh .orchestrator/spec.md`.
    Leia o resumo em `.orchestrator/execute-result.md` e os arquivos alterados.
+   Se a spec tinha `## Testes`, o resumo incluirá a saída dos testes — verifique
+   se passaram antes de seguir.
 
 5. **Revisar → Gemini.** Rode `bash .claude/scripts/review.sh "foco da review"`.
    Leia o veredito em `.orchestrator/review.md`.
@@ -49,6 +57,28 @@ agentes que você invoca via Bash. Use os scripts em `.claude/scripts/`.
   mande o Codex corrigir algo que não é problema.
 - Se um ciclo não reduzir o número de problemas, PARE — está oscilando.
 
+## FALLBACK DE AGENTES (quando um serviço está indisponível)
+
+### Gemini indisponível
+
+`scan.sh` e `review.sh` fazem fallback automático para `claude -p`. O arquivo
+de saída terá um aviso no topo. Continue o fluxo normalmente.
+
+### Codex indisponível
+
+`execute.sh` sai com código 3 e grava `.orchestrator/codex-unavailable`.
+**Quando isso acontecer, você assume a execução diretamente:**
+
+1. Leia `.orchestrator/spec.md`.
+2. Implemente usando suas próprias ferramentas de edição de arquivo.
+3. Siga as mesmas regras da spec: toque só os arquivos listados, respeite
+   restrições e critérios de aceite.
+4. Apague `.orchestrator/codex-unavailable`.
+5. Continue para o passo de review normalmente.
+
+> Única exceção à regra "não edite arquivos diretamente" — só válida enquanto
+> o arquivo `codex-unavailable` existir.
+
 ## Regras de economia de token (prioridade nº 1 do usuário)
 
 - Resultados pesados SEMPRE vão pro disco (`.orchestrator/`). Você lê só resumos.
@@ -66,3 +96,8 @@ agentes que você invoca via Bash. Use os scripts em `.claude/scripts/`.
 - Pergunta conceitual sem mudar código: responda direto.
 - A orquestração compensa em tarefas de média/alta complexidade que tocam várias
   partes do código.
+
+## Configuração do projeto
+
+<!-- Adicione abaixo as regras específicas do seu projeto (stack, convenções, etc.) -->
+<!-- Para ativar TDD automático em toda feature, adicione a linha: TDD: sempre -->

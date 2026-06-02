@@ -65,6 +65,17 @@ if [ "$MISSING" -eq 1 ]; then
 fi
 echo ""
 
+# --- Configuração de TDD ---
+USE_TDD=0
+if [ -t 0 ]; then
+  read -r -p "🧪 Este projeto usa TDD? [s/N] " tdd_ans
+  [[ "$tdd_ans" =~ ^[sS]$ ]] && USE_TDD=1
+else
+  echo "ℹ️  Rodando via pipe — TDD desativado por padrão. Adicione 'TDD: sempre' ao"
+  echo "   CLAUDE.md depois se quiser ativar, ou use a palavra 'TDD' no prompt."
+fi
+echo ""
+
 # --- Função que obtém um arquivo do template: copia (local) ou baixa (remote) ---
 fetch() {
   local rel="$1" dest="$2"
@@ -101,8 +112,16 @@ if [ -f "$CLAUDE_FILE" ]; then
     echo "---" >> "$TMP_NEW"
     echo "" >> "$TMP_NEW"
     cat "$CLAUDE_FILE" >> "$TMP_NEW"
+    if [ "$USE_TDD" -eq 1 ]; then
+      echo "" >> "$TMP_NEW"
+      echo "TDD: sempre" >> "$TMP_NEW"
+    fi
     mv "$TMP_NEW" "$CLAUDE_FILE"
-    echo "✅ Bloco de orquestração anexado no TOPO do CLAUDE.md existente"
+    if [ "$USE_TDD" -eq 1 ]; then
+      echo "✅ Bloco de orquestração anexado no TOPO do CLAUDE.md existente (TDD ativado)"
+    else
+      echo "✅ Bloco de orquestração anexado no TOPO do CLAUDE.md existente"
+    fi
   fi
 else
   # Cria um CLAUDE.md novo só com o bloco + um placeholder pras regras do projeto
@@ -114,8 +133,16 @@ else
     echo "# Regras do projeto"
     echo ""
     echo "<!-- Adicione aqui o stack, comandos e convenções específicas do seu projeto. -->"
+    if [ "$USE_TDD" -eq 1 ]; then
+      echo ""
+      echo "TDD: sempre"
+    fi
   } > "$CLAUDE_FILE"
-  echo "✅ CLAUDE.md criado com o bloco de orquestração"
+  if [ "$USE_TDD" -eq 1 ]; then
+    echo "✅ CLAUDE.md criado com o bloco de orquestração (TDD ativado)"
+  else
+    echo "✅ CLAUDE.md criado com o bloco de orquestração"
+  fi
 fi
 rm -f "$TMP_BLOCK"
 

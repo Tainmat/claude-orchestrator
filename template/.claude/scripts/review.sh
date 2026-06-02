@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # review.sh — Gemini revisa o diff atual e dá um veredito estruturado.
 # O Claude lê o veredito e decide se manda correções pro Codex ou se aprova.
+# Fallback: se Gemini estiver indisponível, Claude assume o review via --print.
 # Uso: review.sh ["foco opcional da review"]
 set -euo pipefail
 
@@ -15,7 +16,9 @@ if [ -z "$DIFF" ]; then
   exit 2
 fi
 
-echo "$DIFF" | head -c 200000 | gemini --yolo -p "Revise o diff abaixo.
+DIFF_TRUNCATED="$(echo "$DIFF" | head -c 200000)"
+
+REVIEW_PROMPT="Revise o diff abaixo.
 Foco: $FOCUS
 
 Responda em markdown com EXATAMENTE esta estrutura:
@@ -29,8 +32,22 @@ APROVADO  |  CORREÇÕES_NECESSÁRIAS
 ## Observações
 (opcional, melhorias não-bloqueantes)
 
-Seja rigoroso mas não invente problemas. Se está bom, diga APROVADO." > "$REVIEW_FILE" 2>/dev/null
+Seja rigoroso mas não invente problemas. Se está bom, diga APROVADO."
 
-echo "✅ Review salva em $REVIEW_FILE"
+if echo "$DIFF_TRUNCATED" | gemini --yolo -p "$REVIEW_PROMPT" > "$REVIEW_FILE" 2>/dev/null; then
+  echo "✅ Review salva em $REVIEW_FILE (agente: Gemini)"
+else
+  echo "⚠️  Gemini indisponível — usando Claude como fallback para review..."
+  {
+    echo "> ⚠️ **Fallback:** review gerada pelo Claude (Gemini indisponível)"
+    echo ""
+    claude -p "$REVIEW_PROMPT
+
+=== DIFF ===
+$DIFF_TRUNCATED"
+  } > "$REVIEW_FILE"
+  echo "✅ Review salva em $REVIEW_FILE (agente: Claude/fallback)"
+fi
+
 echo "--- Veredito ---"
 cat "$REVIEW_FILE"

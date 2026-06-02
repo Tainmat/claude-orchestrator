@@ -59,6 +59,14 @@ Qualquer coisa fora desses dois casos: ORQUESTRA.
    em `.orchestrator/spec.md` um briefing claro do que precisa ser feito. O Codex
    é quem decide COMO implementar — você define O QUÊ. Siga o formato da spec
    descrito mais abaixo. Não escreva o código dentro da spec.
+   - **Decisão TDD:** inclua `## Testes` e `## Comando de testes` na spec SOMENTE
+     se as duas condições forem verdadeiras:
+     1. O prompt do usuário contém a palavra **TDD** OU o CLAUDE.md do projeto
+        contém a linha **`TDD: sempre`**
+     2. `scan.md` confirma lib de testes instalada (não diz "nenhuma lib instalada")
+   - Se a decisão for incluir testes: use o padrão de caminho detectado pelo scan.
+     Se nenhum padrão for encontrado, use `<dir-da-feature>/tests/<Arquivo>.test.<ext>`.
+   - Se qualquer condição falhar: omita as duas seções, não escreva testes.
 
 3. **Executar → Codex.** Rode `bash .claude/scripts/execute.sh .orchestrator/spec.md`.
    Leia o resumo em `.orchestrator/execute-result.md` e os arquivos alterados.
@@ -82,6 +90,9 @@ por ele.
 - **Objetivo:** uma frase do que precisa existir/mudar após a tarefa.
 - **Comportamento esperado:** o que o usuário/sistema verá ou fará.
 - **Arquivos:** lista específica do que editar, criar ou mover (caminhos exatos).
+  Se houver testes (ver abaixo), inclua o arquivo de teste aqui também, no
+  caminho `<dir-da-feature>/tests/<Arquivo>.test.<ext>` — ou no padrão
+  detectado pelo scan, se diferente.
 - **Convenções a seguir:** referências às regras do projeto (TanStack Query +
   Zod + RHF, padrão de pasta, etc — consulte a parte do CLAUDE.md fora deste
   bloco). Aponte o padrão, não copie o código.
@@ -89,6 +100,13 @@ por ele.
   exportados, comportamento em outras telas).
 - **Critérios de aceite:** lista do que precisa estar verdadeiro ao final. Esses
   critérios são o que a review do Gemini vai usar para julgar.
+- **Testes** *(incluir somente se: prompt tem "TDD" ou CLAUDE.md tem "TDD: sempre",
+  E scan.md confirma lib instalada)*: casos de teste em linguagem natural — o
+  Codex escreve o código do teste. Ex: "deve retornar erro 400 quando email
+  estiver vazio", "deve renderizar o spinner enquanto a requisição estiver
+  pendente". Um caso por linha.
+- **Comando de testes** *(obrigatório quando ## Testes está presente)*:
+  comando exato copiado do `scan.md`. Ex: `npx vitest run --reporter=verbose`.
 
 ### O que NÃO entra na spec
 
@@ -152,6 +170,31 @@ Na dúvida, **descreva em palavras** e confie no Codex.
   problemas restantes, PARE e reporte o que ficou pendente. Sem loop infinito.
 - **Pare imediatamente se o veredito for APROVADO.**
 - Se um ciclo não reduzir o número de problemas, PARE — está oscilando.
+
+## FALLBACK DE AGENTES (quando um serviço está indisponível)
+
+### Gemini indisponível (scan ou review)
+
+`scan.sh` e `review.sh` fazem fallback automaticamente para `claude -p`. O
+arquivo de saída (`.orchestrator/scan.md` ou `.orchestrator/review.md`) terá
+um aviso no topo indicando que foi o Claude quem gerou. Continue o fluxo
+normalmente — não há ação extra sua.
+
+### Codex indisponível (execute)
+
+`execute.sh` sai com código 3 e grava `.orchestrator/codex-unavailable`.
+**Quando isso acontecer, você assume a execução diretamente:**
+
+1. Leia `.orchestrator/spec.md` (o briefing que você mesmo escreveu).
+2. Implemente usando suas próprias ferramentas de edição de arquivo.
+3. Siga as mesmas regras da spec: toque só os arquivos listados, respeite
+   restrições e critérios de aceite.
+4. Ao terminar, **apague** `.orchestrator/codex-unavailable`.
+5. Continue para o passo de review normalmente (rode `review.sh`).
+
+> Esta é a única exceção à regra "você não edita arquivos diretamente" —
+> só se aplica quando o arquivo `codex-unavailable` existe.
+> Quando o Codex voltar, o fluxo normal retorna automaticamente.
 
 ## Disciplina de contexto (economia de token dentro do fluxo)
 
