@@ -47,6 +47,7 @@ Qualquer coisa fora desses dois casos: ORQUESTRA.
 |--------|-------|-------------|-------------|
 | **Você (Claude)** | Maestro | Planejar, decidir, avaliar reviews, escrever specs | (raciocínio próprio) |
 | **Gemini** | Olhos | Varrer/mapear codebase; fazer review de diff | `scan.sh` e `review.sh` |
+| **Gemini (specialist)** | Especialista | Convenções e boas práticas da linguagem | `specialist.sh` |
 | **Codex** | Mãos | Implementar código a partir de uma spec | `execute.sh` |
 
 ## FLUXO DE ORQUESTRAÇÃO (passo a passo obrigatório)
@@ -54,6 +55,11 @@ Qualquer coisa fora desses dois casos: ORQUESTRA.
 1. **Mapear → Gemini.** Rode `bash .claude/scripts/scan.sh "o que mapear"`.
    Resultado vai pro disco (`.orchestrator/scan.md`). Leia esse arquivo — NÃO
    peça o codebase inteiro. Confie no mapa do Gemini.
+
+1.5. **Especialista de linguagem (opcional) → Gemini.** Se a tarefa envolve
+   código específico de uma linguagem, rode `bash .claude/scripts/specialist.sh`.
+   Leia `.orchestrator/specialist.md` antes de escrever a spec — use as
+   convenções detectadas na seção "Convenções a seguir".
 
 2. **Escrever a spec (BRIEFING, não playbook) → você.** Com base no mapa, escreva
    em `.orchestrator/spec.md` um briefing claro do que precisa ser feito. O Codex
@@ -78,6 +84,11 @@ Qualquer coisa fora desses dois casos: ORQUESTRA.
    Gemini. Se houver problemas reais, escreva nova spec de correção em
    `.orchestrator/spec.md` (só as correções) e volte ao passo 3. Se estiver bom,
    finalize e reporte ao usuário o que cada agente fez.
+
+6. **Commitar (semi-auto) → você.** Se o veredito for APROVADO e houver
+   alterações uncommitted, rode `bash .claude/scripts/commit.sh`. O script
+   gera a mensagem via Gemini, apresenta ao usuário e commita só após
+   confirmação. Não faz push nem MR — use `finish-task.sh` para isso.
 
 ## Formato da spec (BRIEFING, não playbook)
 

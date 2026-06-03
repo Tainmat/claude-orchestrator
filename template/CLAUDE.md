@@ -10,6 +10,7 @@ agentes que você invoca via Bash. Use os scripts em `.claude/scripts/`.
 |--------|-------|-------------|-------------|
 | **Você (Claude)** | Maestro | Planejar, decidir, avaliar reviews, escrever specs | (raciocínio próprio) |
 | **Gemini** | Olhos | Varrer/mapear codebase grande; fazer review de diff | `scan.sh` e `review.sh` |
+| **Gemini (specialist)** | Especialista | Convenções e boas práticas da linguagem | `specialist.sh` |
 | **Codex** | Mãos | Implementar código a partir de uma spec | `execute.sh` |
 
 ## Fluxo padrão (roteamento)
@@ -21,6 +22,11 @@ agentes que você invoca via Bash. Use os scripts em `.claude/scripts/`.
    conhece, rode `bash .claude/scripts/scan.sh "o que precisa ser mapeado"`.
    O resultado vai pro disco (`.orchestrator/scan.md`). Leia esse arquivo — NÃO
    peça o codebase inteiro. Confie no mapa do Gemini.
+
+2.5. **Especialista de linguagem (opcional) → Gemini.** Se a tarefa envolve
+   código específico de uma linguagem, rode `bash .claude/scripts/specialist.sh`.
+   Leia `.orchestrator/specialist.md` antes de escrever a spec — use as
+   convenções detectadas na seção "Convenções a seguir".
 
 3. **Escrever a spec.** Com base no mapa, escreva uma especificação clara e
    autocontida em `.orchestrator/spec.md`. A spec deve dizer EXATAMENTE o que
@@ -45,6 +51,11 @@ agentes que você invoca via Bash. Use os scripts em `.claude/scripts/`.
    não o Gemini. Se concordar que há problemas reais, escreva uma nova spec de
    correção em `.orchestrator/spec.md` (só as correções) e volte ao passo 4.
    Se estiver bom, finalize.
+
+7. **Commitar (semi-auto) → você.** Se o veredito for APROVADO e houver
+   alterações uncommitted, rode `bash .claude/scripts/commit.sh`. O script
+   gera a mensagem via Gemini, apresenta ao usuário e commita só após
+   confirmação. Não faz push nem MR — use `finish-task.sh` para isso.
 
 ## CONDIÇÃO DE PARADA (crítico — protege custo)
 
