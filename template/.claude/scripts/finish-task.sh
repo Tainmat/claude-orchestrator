@@ -57,12 +57,17 @@ $(echo "$UNCOMMITTED_DIFF" | head -c 150000)"
   echo "🧠 Gerando mensagem de commit via Gemini..."
   COMMIT_FILE="$OUT_DIR/commit-msg.md"
 
-  if gemini --yolo -p "$COMMIT_PROMPT" > "$COMMIT_FILE" 2>/dev/null; then
+  if timeout 30 gemini --yolo -p "$COMMIT_PROMPT" > "$COMMIT_FILE" 2>/dev/null; then
     echo "✅ Mensagem gerada (agente: Gemini)"
+  elif timeout 30 gemini --yolo -m gemini-pro -p "$COMMIT_PROMPT" > "$COMMIT_FILE" 2>/dev/null; then
+    echo "✅ Mensagem gerada (agente: Gemini Pro)"
   else
-    echo "⚠️  Gemini indisponível — usando Claude como fallback..."
-    claude -p "$COMMIT_PROMPT" > "$COMMIT_FILE"
-    echo "✅ Mensagem gerada (agente: Claude/fallback)"
+    echo "⚠️  Gemini indisponível — usando Codex como fallback..."
+    _tmp="$(mktemp)"
+    codex exec --sandbox read-only -o "$_tmp" "$COMMIT_PROMPT" 2>/dev/null || true
+    cat "$_tmp" > "$COMMIT_FILE"
+    rm -f "$_tmp"
+    echo "✅ Mensagem gerada (agente: Codex/fallback)"
   fi
 
   # Extrai a mensagem de dentro do bloco de código
@@ -190,7 +195,16 @@ Retorne ESTRITAMENTE em JSON válido com as chaves 'title' e 'description'. Sem 
 === DIFF ===
 $BRANCH_DIFF"
 
-MR_DATA="$(gemini --yolo -p "$MR_PROMPT" 2>/dev/null || echo '')"
+_mr_tmp="$(mktemp)"
+if timeout 60 gemini --yolo -p "$MR_PROMPT" > "$_mr_tmp" 2>/dev/null; then
+  :
+elif timeout 60 gemini --yolo -m gemini-pro -p "$MR_PROMPT" > "$_mr_tmp" 2>/dev/null; then
+  :
+else
+  codex exec --sandbox read-only -o "$_mr_tmp" "$MR_PROMPT" 2>/dev/null || true
+fi
+MR_DATA="$(cat "$_mr_tmp")"
+rm -f "$_mr_tmp"
 
 if [ -n "$MR_DATA" ]; then
   MR_TITLE="$(echo "$MR_DATA" | jq -r '.title // empty' 2>/dev/null || true)"

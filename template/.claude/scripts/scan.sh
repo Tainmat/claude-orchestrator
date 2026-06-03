@@ -32,16 +32,21 @@ Inclua obrigatoriamente uma seção '## Setup de testes' com:
 
 Seja denso. Sem preâmbulo. Máximo ~400 linhas."
 
-if gemini --yolo -p "$SCAN_PROMPT" > "$OUT_FILE" 2>/dev/null; then
+if timeout 60 gemini --yolo -p "$SCAN_PROMPT" > "$OUT_FILE" 2>/dev/null; then
   echo "✅ Mapa salvo em $OUT_FILE (agente: Gemini, $(wc -l < "$OUT_FILE") linhas)"
+elif timeout 60 gemini --yolo -m gemini-pro -p "$SCAN_PROMPT" > "$OUT_FILE" 2>/dev/null; then
+  echo "✅ Mapa salvo em $OUT_FILE (agente: Gemini Pro, $(wc -l < "$OUT_FILE") linhas)"
 else
-  echo "⚠️  Gemini indisponível — usando Claude como fallback para scan..."
+  echo "⚠️  Gemini indisponível — usando Codex como fallback para scan..."
+  _tmp="$(mktemp)"
+  codex exec --sandbox read-only -o "$_tmp" "$SCAN_PROMPT" 2>/dev/null || true
   {
-    echo "> ⚠️ **Fallback:** mapa gerado pelo Claude (Gemini indisponível)"
+    echo "> ⚠️ **Fallback:** mapa gerado pelo Codex (Gemini indisponível)"
     echo ""
-    claude -p "$SCAN_PROMPT"
+    cat "$_tmp"
   } > "$OUT_FILE"
-  echo "✅ Mapa salvo em $OUT_FILE (agente: Claude/fallback, $(wc -l < "$OUT_FILE") linhas)"
+  rm -f "$_tmp"
+  echo "✅ Mapa salvo em $OUT_FILE (agente: Codex/fallback, $(wc -l < "$OUT_FILE") linhas)"
 fi
 
 echo "--- Resumo (primeiras 40 linhas) ---"

@@ -42,12 +42,17 @@ $(echo "$UNCOMMITTED_DIFF" | head -c 150000)"
 echo "🧠 Gerando mensagem de commit via Gemini..."
 COMMIT_FILE="$OUT_DIR/commit-msg.md"
 
-if gemini --yolo -p "$COMMIT_PROMPT" > "$COMMIT_FILE" 2>/dev/null; then
+if timeout 30 gemini --yolo -p "$COMMIT_PROMPT" > "$COMMIT_FILE" 2>/dev/null; then
   echo "✅ Mensagem gerada (agente: Gemini)"
+elif timeout 30 gemini --yolo -m gemini-pro -p "$COMMIT_PROMPT" > "$COMMIT_FILE" 2>/dev/null; then
+  echo "✅ Mensagem gerada (agente: Gemini Pro)"
 else
-  echo "⚠️  Gemini indisponível — usando Claude como fallback..."
-  claude -p "$COMMIT_PROMPT" > "$COMMIT_FILE"
-  echo "✅ Mensagem gerada (agente: Claude/fallback)"
+  echo "⚠️  Gemini indisponível — usando Codex como fallback..."
+  _tmp="$(mktemp)"
+  codex exec --sandbox read-only -o "$_tmp" "$COMMIT_PROMPT" 2>/dev/null || true
+  cat "$_tmp" > "$COMMIT_FILE"
+  rm -f "$_tmp"
+  echo "✅ Mensagem gerada (agente: Codex/fallback)"
 fi
 
 # Extrai a mensagem de dentro do bloco de código

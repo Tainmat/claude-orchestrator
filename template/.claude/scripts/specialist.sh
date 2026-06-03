@@ -116,16 +116,21 @@ Máximo 400 palavras. Responda em português."
 
 echo "🧠 Gerando guia de especialista para '$STACK_DETECTED' via Gemini..."
 
-if gemini --yolo -p "$SPECIALIST_PROMPT" > "$OUT_FILE" 2>/dev/null; then
+if timeout 45 gemini --yolo -p "$SPECIALIST_PROMPT" > "$OUT_FILE" 2>/dev/null; then
   echo "✅ Guia salvo em $OUT_FILE (agente: Gemini, $(wc -l < "$OUT_FILE") linhas)"
+elif timeout 45 gemini --yolo -m gemini-pro -p "$SPECIALIST_PROMPT" > "$OUT_FILE" 2>/dev/null; then
+  echo "✅ Guia salvo em $OUT_FILE (agente: Gemini Pro, $(wc -l < "$OUT_FILE") linhas)"
 else
-  echo "⚠️  Gemini indisponível — usando Claude como fallback..."
+  echo "⚠️  Gemini indisponível — usando Codex como fallback..."
+  _tmp="$(mktemp)"
+  codex exec --sandbox read-only -o "$_tmp" "$SPECIALIST_PROMPT" 2>/dev/null || true
   {
-    echo "> ⚠️ **Fallback:** guia gerado pelo Claude (Gemini indisponível)"
+    echo "> ⚠️ **Fallback:** guia gerado pelo Codex (Gemini indisponível)"
     echo ""
-    claude -p "$SPECIALIST_PROMPT"
+    cat "$_tmp"
   } > "$OUT_FILE"
-  echo "✅ Guia salvo em $OUT_FILE (agente: Claude/fallback, $(wc -l < "$OUT_FILE") linhas)"
+  rm -f "$_tmp"
+  echo "✅ Guia salvo em $OUT_FILE (agente: Codex/fallback, $(wc -l < "$OUT_FILE") linhas)"
 fi
 
 echo "--- Resumo (primeiras 20 linhas) ---"

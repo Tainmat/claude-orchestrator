@@ -72,8 +72,10 @@ agentes que você invoca via Bash. Use os scripts em `.claude/scripts/`.
 
 ### Gemini indisponível
 
-`scan.sh` e `review.sh` fazem fallback automático para `claude -p`. O arquivo
-de saída terá um aviso no topo. Continue o fluxo normalmente.
+`scan.sh`, `review.sh`, `specialist.sh` e `commit.sh` tentam primeiro o modelo
+padrão do Gemini (timeout 60 s), depois `gemini-pro` (timeout 60 s) e, se ambos
+falharem, usam Codex como fallback final. O arquivo de saída terá um aviso no
+topo quando o fallback for ativado. Continue o fluxo normalmente.
 
 ### Codex indisponível
 

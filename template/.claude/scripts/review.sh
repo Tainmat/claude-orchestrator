@@ -34,19 +34,24 @@ APROVADO  |  CORREÇÕES_NECESSÁRIAS
 
 Seja rigoroso mas não invente problemas. Se está bom, diga APROVADO."
 
-if echo "$DIFF_TRUNCATED" | gemini --yolo -p "$REVIEW_PROMPT" > "$REVIEW_FILE" 2>/dev/null; then
+if echo "$DIFF_TRUNCATED" | timeout 60 gemini --yolo -p "$REVIEW_PROMPT" > "$REVIEW_FILE" 2>/dev/null; then
   echo "✅ Review salva em $REVIEW_FILE (agente: Gemini)"
+elif echo "$DIFF_TRUNCATED" | timeout 60 gemini --yolo -m gemini-pro -p "$REVIEW_PROMPT" > "$REVIEW_FILE" 2>/dev/null; then
+  echo "✅ Review salva em $REVIEW_FILE (agente: Gemini Pro)"
 else
-  echo "⚠️  Gemini indisponível — usando Claude como fallback para review..."
-  {
-    echo "> ⚠️ **Fallback:** review gerada pelo Claude (Gemini indisponível)"
-    echo ""
-    claude -p "$REVIEW_PROMPT
+  echo "⚠️  Gemini indisponível — usando Codex como fallback para review..."
+  _tmp="$(mktemp)"
+  codex exec --sandbox read-only -o "$_tmp" "$REVIEW_PROMPT
 
 === DIFF ===
-$DIFF_TRUNCATED"
+$DIFF_TRUNCATED" 2>/dev/null || true
+  {
+    echo "> ⚠️ **Fallback:** review gerada pelo Codex (Gemini indisponível)"
+    echo ""
+    cat "$_tmp"
   } > "$REVIEW_FILE"
-  echo "✅ Review salva em $REVIEW_FILE (agente: Claude/fallback)"
+  rm -f "$_tmp"
+  echo "✅ Review salva em $REVIEW_FILE (agente: Codex/fallback)"
 fi
 
 echo "--- Veredito ---"

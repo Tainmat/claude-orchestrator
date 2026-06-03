@@ -189,7 +189,7 @@ fi
 rm -f "$TMP_BLOCK"
 
 # --- Scripts ---
-for s in scan.sh execute.sh review.sh finish-task.sh; do
+for s in scan.sh execute.sh review.sh finish-task.sh commit.sh specialist.sh; do
   fetch ".claude/scripts/$s" "$TARGET/.claude/scripts/$s"
 done
 chmod +x "$TARGET/.claude/scripts/"*.sh
