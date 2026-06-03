@@ -76,6 +76,48 @@ else
 fi
 echo ""
 
+# --- Configuração do GitLab ---
+GITLAB_CONFIG_FILE="$TARGET/.orchestrator/.gitlab-config"
+USE_GITLAB=0
+if [ -t 0 ]; then
+  read -r -p "🦊 Configurar integração com GitLab? [s/N] " gl_ans
+  if [[ "$gl_ans" =~ ^[sS]$ ]]; then
+    USE_GITLAB=1
+    echo ""
+    read -r -p "   URL do GitLab [https://gitlab.com]: " gl_url
+    gl_url="${gl_url:-https://gitlab.com}"
+
+    read -r -p "   Personal Access Token (escopo: api — Preferences > Access Tokens): " gl_token
+    while [ -z "$gl_token" ]; do
+      echo "   ⚠️  Token não pode ser vazio."
+      read -r -p "   Personal Access Token: " gl_token
+    done
+
+    read -r -p "   Project ID numérico (Settings > General > Project ID): " gl_project
+    while [ -z "$gl_project" ]; do
+      echo "   ⚠️  Project ID não pode ser vazio."
+      read -r -p "   Project ID: " gl_project
+    done
+
+    mkdir -p "$(dirname "$GITLAB_CONFIG_FILE")"
+    cat > "$GITLAB_CONFIG_FILE" <<EOF
+# Configuração GitLab — gerado por install.sh
+# Este arquivo é local e está no .gitignore (.orchestrator/)
+export GITLAB_URL="$gl_url"
+export GITLAB_TOKEN="$gl_token"
+export GITLAB_PROJECT_ID="$gl_project"
+EOF
+    echo "✅ Configuração GitLab salva em .orchestrator/.gitlab-config"
+  else
+    echo "ℹ️  GitLab não configurado. Defina GITLAB_TOKEN, GITLAB_PROJECT_ID e"
+    echo "   opcionalmente GITLAB_URL no ambiente, ou rode install.sh novamente."
+  fi
+else
+  echo "ℹ️  Rodando via pipe — GitLab não configurado. Defina as variáveis manualmente"
+  echo "   ou execute: bash install.sh $TARGET"
+fi
+echo ""
+
 # --- Função que obtém um arquivo do template: copia (local) ou baixa (remote) ---
 fetch() {
   local rel="$1" dest="$2"
@@ -147,7 +189,7 @@ fi
 rm -f "$TMP_BLOCK"
 
 # --- Scripts ---
-for s in scan.sh execute.sh review.sh; do
+for s in scan.sh execute.sh review.sh finish-task.sh; do
   fetch ".claude/scripts/$s" "$TARGET/.claude/scripts/$s"
 done
 chmod +x "$TARGET/.claude/scripts/"*.sh

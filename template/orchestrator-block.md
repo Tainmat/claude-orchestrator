@@ -196,6 +196,31 @@ normalmente — não há ação extra sua.
 > só se aplica quando o arquivo `codex-unavailable` existe.
 > Quando o Codex voltar, o fluxo normal retorna automaticamente.
 
+## Gatilho "tarefa finalizada"
+
+Quando o usuário digitar **"tarefa finalizada"** (ou variações: "task done",
+"finalizei", "terminou"), execute o fluxo de fechamento de tarefa:
+
+1. **Analisar branch → Gemini.** Rode `bash .claude/scripts/finish-task.sh [branch-base]`.
+   O script envia o diff completo da branch pro Gemini, que gera um review
+   estruturado e uma mensagem de commit (Conventional Commits).
+   Leia `.orchestrator/finish-task.md`.
+
+2. **Apresentar ao usuário:**
+   - O review do Gemini (veredito + problemas encontrados)
+   - A mensagem de commit sugerida
+
+3. **Se houver CORREÇÕES_NECESSÁRIAS:** pergunte ao usuário se deseja corrigir
+   antes de commitar. Se sim, volte ao fluxo de orquestração normal e depois
+   repita este fluxo.
+
+4. **O script conduz o restante de forma interativa:** confirmação do commit,
+   push e opcionalmente criação do MR no GitLab via `curl` + API REST.
+
+> **Pré-requisito para MR:** variáveis `GITLAB_TOKEN`, `GITLAB_PROJECT_ID` e
+> opcionalmente `GITLAB_URL` (padrão: `https://gitlab.com`) exportadas no shell.
+> O script instrui o usuário a configurá-las caso estejam ausentes.
+
 ## Disciplina de contexto (economia de token dentro do fluxo)
 
 - Resultados pesados SEMPRE vão pro disco (`.orchestrator/`). Você lê só resumos.

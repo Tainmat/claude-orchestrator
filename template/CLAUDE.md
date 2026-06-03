@@ -89,6 +89,22 @@ de saída terá um aviso no topo. Continue o fluxo normalmente.
 - Specs devem ser concisas e cirúrgicas. Quanto mais focada a spec, menos o Codex
   diverge e menos ciclos de correção você gasta.
 
+## Gatilho "tarefa finalizada"
+
+Quando o usuário digitar **"tarefa finalizada"** (ou variações: "task done",
+"finalizei", "terminou"), execute o fluxo de fechamento:
+
+1. `bash .claude/scripts/finish-task.sh [branch-base]` — Gemini revisa toda a
+   branch e gera mensagem de commit (Conventional Commits). Leia `.orchestrator/finish-task.md`.
+2. Apresente o review e a mensagem sugerida. Se houver problemas, pergunte se
+   o usuário quer corrigir antes de continuar.
+3. O script conduz o restante de forma interativa: confirmação do commit, push
+   e criação do MR no GitLab via API (`curl`).
+
+> **Pré-requisito para MR:** variáveis `GITLAB_TOKEN`, `GITLAB_PROJECT_ID` e
+> opcionalmente `GITLAB_URL` (padrão: `https://gitlab.com`) no ambiente do shell.
+> O script explica como configurá-las caso estejam ausentes.
+
 ## Quando NÃO orquestrar
 
 - Tarefa trivial (renomear variável, ajuste de 1 linha): faça você mesmo, mais
