@@ -86,3 +86,13 @@ else
   echo "ℹ️  Commit cancelado."
   exit 0
 fi
+
+# ──────────────────────────────────────────────────────────────
+# OPCIONAL — MERGE REQUEST
+# ──────────────────────────────────────────────────────────────
+echo ""
+read -r -p "Deseja criar um Merge Request agora? [s/N] " confirm_mr_now
+if [[ "$confirm_mr_now" =~ ^[sS]$ ]]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  bash "$SCRIPT_DIR/create-mr.sh" "" "$COMMIT_MSG"
+fi
