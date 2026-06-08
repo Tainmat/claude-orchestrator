@@ -114,9 +114,10 @@ Quando o usuário digitar **"tarefa finalizada"** (ou variações: "task done",
 3. O script conduz o restante de forma interativa: confirmação do commit, push
    e criação do MR no GitLab via API (`curl`).
 
-> **Pré-requisito para MR:** variáveis `GITLAB_TOKEN`, `GITLAB_PROJECT_ID` e
-> opcionalmente `GITLAB_URL` (padrão: `https://gitlab.com`) no ambiente do shell.
-> O script explica como configurá-las caso estejam ausentes.
+> **Pré-requisito para MR:** as credenciais são lidas automaticamente de
+> `.orchestrator/.gitlab-config` (gerado pelo `install.sh`). Cada projeto tem
+> seu próprio arquivo — não é necessário nada no `.zshrc`. Se o arquivo não
+> existir, o script orienta como criá-lo.
 
 ## Quando NÃO orquestrar
 

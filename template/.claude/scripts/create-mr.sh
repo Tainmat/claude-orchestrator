@@ -70,7 +70,10 @@ GITLAB_URL="${GITLAB_URL:-https://gitlab.com}"
 
 if [ -z "${GITLAB_TOKEN:-}" ]; then
   echo "❌ GITLAB_TOKEN não definido."
-  echo "   Configure via install.sh ou adicione ao ~/.zshrc:"
+  echo "   Configure rodando install.sh novamente, ou crie/edite o arquivo:"
+  echo "   .orchestrator/.gitlab-config"
+  echo ""
+  echo "   Conteúdo esperado:"
   echo "   export GITLAB_TOKEN=\"glpat-xxxx\""
   echo "   export GITLAB_PROJECT_ID=\"123\""
   echo "   export GITLAB_URL=\"https://gitlab.minhaempresa.com\""
